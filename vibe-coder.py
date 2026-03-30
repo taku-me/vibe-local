@@ -6253,11 +6253,7 @@ class TUI:
         /plan and /approve commands.
         """
 
-        # Teardown scroll region and stop InputMonitor so input() echo works correctly.
-        # Without this, the prompt renders within the scroll area at the wrong cursor
-        # position, causing subsequent agent output to stream at wrong column offsets.
-        sr = _active_scroll_region
-        sr_was_active = sr is not None and sr._active
+        # Stop InputMonitor (cbreak mode) so input() echo works correctly.
         im = _active_input_monitor
         if im is not None:
             im.stop()
@@ -6270,8 +6266,12 @@ class TUI:
                     termios.tcsetattr(sys.stdin, termios.TCSANOW, _tattr)
                 except termios.error:
                     pass
-        if sr_was_active:
-            sr.teardown()
+
+        # Move cursor to column 1 to prevent prompt rendering at wrong column offset.
+        # Do NOT teardown/setup the scroll region here — that overwrites the footer
+        # on the last row, erasing the user's typed text when Enter is pressed.
+        sys.stdout.write("\r")
+        sys.stdout.flush()
 
         # Fallback: standard input() with readline
         try:
@@ -6302,8 +6302,6 @@ class TUI:
         finally:
             if HAS_READLINE:
                 readline.set_startup_hook()
-            if sr_was_active:
-                sr.setup()
             # Don't restart InputMonitor here — the agent will start it on next run
 
     def get_multiline_input(self, session=None, plan_mode=False, prefill=""):
