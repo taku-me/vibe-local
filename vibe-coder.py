@@ -6402,6 +6402,12 @@ class TUI:
                 _status_line_shown = False
 
         for chunk in response_iter:
+            # Check for ESC interrupt during streaming
+            if _active_input_monitor is not None and _active_input_monitor.pressed:
+                _clear_thinking_status()
+                self._scroll_print(f"\n{C.YELLOW}Stopped (ESC).{C.RESET}")
+                break
+
             choice = chunk.get("choices", [{}])[0]
             delta = choice.get("delta", {})
 
