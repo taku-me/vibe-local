@@ -6261,6 +6261,15 @@ class TUI:
         im = _active_input_monitor
         if im is not None:
             im.stop()
+        else:
+            # Ensure echo is enabled (cbreak mode may linger if monitor stopped abnormally)
+            if HAS_TERMIOS and sys.stdin.isatty():
+                try:
+                    _tattr = termios.tcgetattr(sys.stdin)
+                    _tattr[3] = _tattr[3] | termios.ECHO | termios.ICANON
+                    termios.tcsetattr(sys.stdin, termios.TCSANOW, _tattr)
+                except termios.error:
+                    pass
         if sr_was_active:
             sr.teardown()
 
@@ -6401,11 +6410,11 @@ class TUI:
                     print(f"\r{' ' * _status_line_len}\r", end="", flush=True)
                 _status_line_shown = False
 
+        _esc_break = False
         for chunk in response_iter:
             # Check for ESC interrupt during streaming
             if _active_input_monitor is not None and _active_input_monitor.pressed:
-                _clear_thinking_status()
-                self._scroll_print(f"\n{C.YELLOW}Stopped (ESC).{C.RESET}")
+                _esc_break = True
                 break
 
             choice = chunk.get("choices", [{}])[0]
@@ -6490,7 +6499,7 @@ class TUI:
                 header_printed = True
             self._scroll_print(think_buf, end="", flush=True)
 
-        if not header_printed:
+        if not _esc_break and not header_printed:
             self._scroll_print(f"\n{C.BBLUE}assistant{C.RESET}: ", end="", flush=True)
 
         full_text = "".join(raw_parts)
