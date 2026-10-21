@@ -1,0 +1,43 @@
+{
+ "created": "2026-10-21",
+ "note": "既存の違反の指紋。段 2 で減らす。増やす変更はユーザーの承認が要る(docs/security-gate-design.md §3.6)",
+ "count": 6,
+ "findings": [
+  {
+   "rule": "inject.shell",
+   "path": "bk-vibe-coder.py",
+   "fp": "fe12858feebbda1ac6080ee7",
+   "hint": "subprocess.Popen(…, shell=True) にリテラルでない文字列。配列で渡し shell=True を外す"
+  },
+  {
+   "rule": "inject.shell",
+   "path": "vibe-coder.py",
+   "fp": "58c45f1419816f3d1a4ede24",
+   "hint": "subprocess.Popen(…, shell=True) にリテラルでない文字列。配列で渡し shell=True を外す"
+  },
+  {
+   "rule": "lint.ruff.S602",
+   "path": "bk-vibe-coder.py",
+   "fp": "248ea0fe30b7c0cf62becac5",
+   "hint": "`subprocess` call with `shell=True` identified, security issue(ruff S602)"
+  },
+  {
+   "rule": "lint.ruff.S602",
+   "path": "vibe-coder.py",
+   "fp": "8556d438ae088d31deaef810",
+   "hint": "`subprocess` call with `shell=True` identified, security issue(ruff S602)"
+  },
+  {
+   "rule": "server.debug",
+   "path": "bk-vibe-coder.py",
+   "fp": "6fc10685ddcd04d218762316",
+   "hint": "debug=True。本番では外す"
+  },
+  {
+   "rule": "server.debug",
+   "path": "vibe-coder.py",
+   "fp": "68bb435b80a5cc100e58c35c",
+   "hint": "debug=True。本番では外す"
+  }
+ ]
+}
